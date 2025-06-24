@@ -23,6 +23,10 @@
     </style>
   </head>
   <body>
+    <button id="downloadBtn" style="position: absolute; top: 10px; right: 10px; z-index: 1000; padding: 8px 16px;">
+  📥 Baixar PDF
+</button>
+
     <div id="viewerContainer">
       <div id="viewer" class="pdfViewer"></div>
     </div>
@@ -33,6 +37,18 @@
     <script>
       const params = new URLSearchParams(window.location.search);
       const fileUrl = params.get("file");
+      document.getElementById("downloadBtn").addEventListener("click", () => {
+  if (fileUrl) {
+    const a = document.createElement("a");
+    a.href = fileUrl;
+    a.download = "Relatorio_Semanal.pdf";
+    a.target = "_blank";
+    a.click();
+  } else {
+    alert("PDF não encontrado.");
+  }
+});
+
       const pixelId = params.get("pixel_id");
 
       let currentPage = 1;

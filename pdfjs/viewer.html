@@ -61,94 +61,89 @@
     <!-- PDF.js scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
 
-    <script>
-      const params = new URLSearchParams(window.location.search);
-      const fileUrl = params.get("file");
-      const pixelId = params.get("pixel_id");
+  // Link do seu webhook que serve o PDF
+  const servePdfUrl = params.get("file");
 
-      let currentPage = 1;
-      let pageEnterTime = Date.now();
+  // Link real (direto) do PDF (usado apenas se necessário)
+  const realPdfUrl = new URLSearchParams(servePdfUrl.split("?")[1]).get("file");
 
-      // PDF.js worker config obrigatório
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  const pixelId = params.get("pixel_id");
 
-      // Baixar PDF sem redirecionar
-      document.getElementById("downloadButton").addEventListener("click", () => {
-        const a = document.createElement("a");
-        a.href = fileUrl;
-        a.download = "Relatorio_Semanal.pdf";
-        a.click();
-      });
+  let currentPage = 1;
+  let pageEnterTime = Date.now();
 
-      // Tracking ao fechar a aba
-      window.addEventListener("beforeunload", () => {
-        const elapsed = Math.floor((Date.now() - pageEnterTime) / 1000);
-        fetch("https://primorainc.app.n8n.cloud/webhook/pixel-tracking", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            pixel_id: pixelId,
-            file_url: fileUrl,
-            tempo_total: elapsed,
-            ultima_pagina_visualizada: currentPage
-          })
-        });
-      });
+  // Tracking quando fecha a aba
+  window.addEventListener("beforeunload", () => {
+    const elapsed = Math.floor((Date.now() - pageEnterTime) / 1000);
+    fetch("https://primorainc.app.n8n.cloud/webhook/pixel-tracking", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pixel_id: pixelId,
+        file_url: servePdfUrl,
+        tempo_total: elapsed
+      })
+    });
+  });
 
-      // PDF.js setup
-      const CMAP_URL = "https://unpkg.com/pdfjs-dist@3.11.174/cmaps/";
-      const CMAP_PACKED = true;
+  // Botão de download
+  document.getElementById("downloadButton").addEventListener("click", () => {
+    const a = document.createElement("a");
+    a.href = servePdfUrl;  // <--- usa o webhook
+    a.download = "Relatorio_Semanal.pdf";
+    a.click();
+  });
 
-      const eventBus = new pdfjsViewer.EventBus();
-      const pdfLinkService = new pdfjsViewer.PDFLinkService({ eventBus });
-      const pdfViewer = new pdfjsViewer.PDFViewer({
-        container: document.getElementById("viewerContainer"),
-        eventBus,
-        linkService: pdfLinkService
-      });
+  // PDF.js setup (mantém servePdfUrl como origem)
+  const CMAP_URL = "https://unpkg.com/pdfjs-dist@3.11.174/cmaps/";
+  const CMAP_PACKED = true;
 
-      pdfLinkService.setViewer(pdfViewer);
+  const eventBus = new pdfjsViewer.EventBus();
+  const pdfLinkService = new pdfjsViewer.PDFLinkService({ eventBus });
+  const pdfViewer = new pdfjsViewer.PDFViewer({
+    container: document.getElementById("viewerContainer"),
+    eventBus,
+    linkService: pdfLinkService
+  });
 
-      eventBus.on("pagesinit", () => {
-        pdfViewer.currentScaleValue = "page-fixed"; // ou "100" para zoom fixo
-      });
+  pdfLinkService.setViewer(pdfViewer);
 
-      eventBus.on("pagechanging", (e) => {
-        const now = Date.now();
-        const timeSpent = Math.floor((now - pageEnterTime) / 1000);
-        fetch("https://primorainc.app.n8n.cloud/webhook/pdf-page", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            pixel_id: pixelId,
-            file_url: fileUrl,
-            pagina: currentPage,
-            tempo_em_segundos: timeSpent
-          })
-        });
-        currentPage = e.pageNumber;
-        pageEnterTime = now;
-      });
+  eventBus.on("pagesinit", () => {
+    pdfViewer.currentScaleValue = "page-width";
+  });
 
-      // Carrega o PDF
-      if (fileUrl) {
-        const loadingTask = pdfjsLib.getDocument({
-          url: fileUrl,
-          cMapUrl: CMAP_URL,
-          cMapPacked: CMAP_PACKED
-        });
+  eventBus.on("pagechanging", (e) => {
+    const now = Date.now();
+    const timeSpent = Math.floor((now - pageEnterTime) / 1000);
+    fetch("https://primorainc.app.n8n.cloud/webhook/pdf-page", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pixel_id: pixelId,
+        file_url: servePdfUrl,
+        pagina: currentPage,
+        tempo_em_segundos: timeSpent
+      })
+    });
+    currentPage = e.pageNumber;
+    pageEnterTime = now;
+  });
 
-        loadingTask.promise.then(pdfDoc => {
-          pdfViewer.setDocument(pdfDoc);
-          pdfLinkService.setDocument(pdfDoc, null);
-        }).catch(err => {
-          alert("Erro ao carregar o PDF: " + err.message);
-          console.error(err);
-        });
-      } else {
-        alert("Nenhum arquivo PDF foi especificado na URL.");
-      }
-    </script>
+  if (servePdfUrl) {
+    const loadingTask = pdfjsLib.getDocument({
+      url: servePdfUrl,
+      cMapUrl: CMAP_URL,
+      cMapPacked: CMAP_PACKED
+    });
+    loadingTask.promise.then(pdfDoc => {
+      pdfViewer.setDocument(pdfDoc);
+      pdfLinkService.setDocument(pdfDoc, null);
+    });
+  }
+</script>
+
   </body>
 </html>

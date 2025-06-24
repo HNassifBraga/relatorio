@@ -37,17 +37,30 @@
     <script>
       const params = new URLSearchParams(window.location.search);
       const fileUrl = params.get("file");
-      document.getElementById("downloadBtn").addEventListener("click", () => {
-  if (fileUrl) {
-    const a = document.createElement("a");
-    a.href = fileUrl;
-    a.download = "Relatorio_Semanal.pdf";
-    a.target = "_blank";
-    a.click();
-  } else {
+      document.getElementById("downloadBtn").addEventListener("click", async () => {
+  if (!fileUrl) {
     alert("PDF não encontrado.");
+    return;
+  }
+
+  try {
+    const response = await fetch(fileUrl);
+    const blob = await response.blob();
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Relatorio_Semanal.pdf";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error("Erro ao baixar o PDF:", err);
+    alert("Falha ao baixar o PDF.");
   }
 });
+
 
       const pixelId = params.get("pixel_id");
 

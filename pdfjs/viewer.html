@@ -94,7 +94,7 @@
       pdfLinkService.setViewer(pdfViewer);
 
       eventBus.on("pagesinit", () => {
-        pdfViewer.currentScaleValue = "100";
+        pdfViewer.currentScaleValue = "auto";
       });
 
       eventBus.on("pagechanging", (e) => {

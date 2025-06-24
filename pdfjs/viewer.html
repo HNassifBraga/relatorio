@@ -1,12 +1,16 @@
 ﻿<!DOCTYPE html>
 <html>
-  
   <head>
     <meta charset="utf-8" />
     <title>Relatório em PDF</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css" />
     <style>
-      body { margin: 0; overflow: hidden; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+      }
       #viewerContainer {
         position: absolute;
         top: 0;
@@ -33,7 +37,7 @@
       let currentPage = 1;
       let pageEnterTime = Date.now();
 
-      // Tracking: tempo total na página
+      // Tracking: tempo total
       window.addEventListener("beforeunload", () => {
         const elapsed = Math.floor((Date.now() - pageEnterTime) / 1000);
         fetch("https://primorainc.app.n8n.cloud/webhook/pixel-tracking", {
@@ -47,7 +51,6 @@
         });
       });
 
-      // Setup PDF.js
       const CMAP_URL = "https://unpkg.com/pdfjs-dist@3.11.174/cmaps/";
       const CMAP_PACKED = true;
 

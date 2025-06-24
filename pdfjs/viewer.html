@@ -111,9 +111,9 @@
 
   pdfLinkService.setViewer(pdfViewer);
 
-  //eventBus.on("pagesinit", () => {
-  //  pdfViewer.currentScaleValue = "page-width";
-  //});
+  eventBus.on("pagesinit", () => {
+    pdfViewer.currentScaleValue = "page-fixed";
+  });
 
   eventBus.on("pagechanging", (e) => {
     const now = Date.now();
@@ -149,6 +149,5 @@
 </html>
 
 
-dessa maneira entao?
 
 

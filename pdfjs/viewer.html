@@ -110,7 +110,7 @@
       pdfLinkService.setViewer(pdfViewer);
 
       eventBus.on("pagesinit", () => {
-        pdfViewer.currentScaleValue = "page-width"; // ou "100" para zoom fixo
+        pdfViewer.currentScaleValue = "page-fixed"; // ou "100" para zoom fixo
       });
 
       eventBus.on("pagechanging", (e) => {

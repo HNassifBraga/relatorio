@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="pt-BR">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <title>Relatório em PDF</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css" />
     <style>
@@ -12,12 +12,13 @@
         overflow: hidden;
       }
       #viewerContainer {
-        position: absolute;
+        position: absolute !important;
         top: 0;
         left: 0;
-        width: 100vw;
-        height: 100vh;
+        right: 0;
+        bottom: 0;
         overflow: auto;
+        background: #ccc;
       }
     </style>
   </head>
@@ -37,7 +38,6 @@
       let currentPage = 1;
       let pageEnterTime = Date.now();
 
-      // Tracking: tempo total
       window.addEventListener("beforeunload", () => {
         const elapsed = Math.floor((Date.now() - pageEnterTime) / 1000);
         fetch("https://primorainc.app.n8n.cloud/webhook/pixel-tracking", {
@@ -95,6 +95,8 @@
           pdfViewer.setDocument(pdfDoc);
           pdfLinkService.setDocument(pdfDoc, null);
         });
+      } else {
+        alert("Nenhum arquivo PDF foi especificado na URL.");
       }
     </script>
   </body>

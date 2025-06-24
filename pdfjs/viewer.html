@@ -10,66 +10,78 @@
         padding: 0;
         height: 100%;
         overflow: hidden;
+        font-family: sans-serif;
       }
       #viewerContainer {
-        position: absolute !important;
-        top: 0;
+        position: absolute;
+        top: 40px;
         left: 0;
         right: 0;
         bottom: 0;
         overflow: auto;
         background: #ccc;
       }
+      #controls {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: #f4f4f4;
+        padding: 8px;
+        box-sizing: border-box;
+        z-index: 10;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #aaa;
+      }
+      #downloadButton {
+        padding: 6px 12px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      #downloadButton:hover {
+        background: #0056b3;
+      }
     </style>
   </head>
   <body>
-    <button id="downloadBtn" style="position: absolute; top: 10px; right: 10px; z-index: 1000; padding: 8px 16px;">
-  📥 Baixar PDF
-</button>
+    <div id="controls">
+      <div>Relatório Semanal</div>
+      <button id="downloadButton">⬇️ Baixar PDF</button>
+    </div>
 
     <div id="viewerContainer">
       <div id="viewer" class="pdfViewer"></div>
     </div>
 
+    <!-- PDF.js scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>
-  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.js"></script>
 
     <script>
       const params = new URLSearchParams(window.location.search);
       const fileUrl = params.get("file");
-      document.getElementById("downloadBtn").addEventListener("click", async () => {
-  if (!fileUrl) {
-    alert("PDF não encontrado.");
-    return;
-  }
-
-  try {
-    const response = await fetch(fileUrl);
-    const blob = await response.blob();
-
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "Relatorio_Semanal.pdf";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error("Erro ao baixar o PDF:", err);
-    alert("Falha ao baixar o PDF.");
-  }
-});
-
-
       const pixelId = params.get("pixel_id");
 
       let currentPage = 1;
       let pageEnterTime = Date.now();
 
+      // PDF.js worker config obrigatório
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+      // Baixar PDF sem redirecionar
+      document.getElementById("downloadButton").addEventListener("click", () => {
+        const a = document.createElement("a");
+        a.href = fileUrl;
+        a.download = "Relatorio_Semanal.pdf";
+        a.click();
+      });
+
+      // Tracking ao fechar a aba
       window.addEventListener("beforeunload", () => {
         const elapsed = Math.floor((Date.now() - pageEnterTime) / 1000);
         fetch("https://primorainc.app.n8n.cloud/webhook/pixel-tracking", {
@@ -83,6 +95,7 @@
         });
       });
 
+      // PDF.js setup
       const CMAP_URL = "https://unpkg.com/pdfjs-dist@3.11.174/cmaps/";
       const CMAP_PACKED = true;
 
@@ -97,7 +110,7 @@
       pdfLinkService.setViewer(pdfViewer);
 
       eventBus.on("pagesinit", () => {
-        pdfViewer.currentScaleValue = "page-fit";
+        pdfViewer.currentScaleValue = "page-width"; // ou "100" para zoom fixo
       });
 
       eventBus.on("pagechanging", (e) => {
@@ -117,15 +130,20 @@
         pageEnterTime = now;
       });
 
+      // Carrega o PDF
       if (fileUrl) {
         const loadingTask = pdfjsLib.getDocument({
           url: fileUrl,
           cMapUrl: CMAP_URL,
           cMapPacked: CMAP_PACKED
         });
+
         loadingTask.promise.then(pdfDoc => {
           pdfViewer.setDocument(pdfDoc);
           pdfLinkService.setDocument(pdfDoc, null);
+        }).catch(err => {
+          alert("Erro ao carregar o PDF: " + err.message);
+          console.error(err);
         });
       } else {
         alert("Nenhum arquivo PDF foi especificado na URL.");

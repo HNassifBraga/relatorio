@@ -65,7 +65,7 @@
       pdfLinkService.setViewer(pdfViewer);
 
       eventBus.on("pagesinit", () => {
-        pdfViewer.currentScaleValue = "page-fit";
+        pdfViewer.currentScaleValue = "80";
       });
 
       eventBus.on("pagechanging", (e) => {

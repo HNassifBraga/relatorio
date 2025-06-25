@@ -76,9 +76,12 @@
   let pageEnterTime = Date.now();
 
 
-PDFViewerApplication.eventBus.on('pagechanging', function (e) {
-  currentPage = e.pageNumber;
-});
+setTimeout(() => {
+  PDFViewerApplication.eventBus.on('pagechanging', function (e) {
+    currentPage = e.pageNumber;
+    console.log("Página atual:", currentPage);
+  });
+}, 1000);
 
 // Envia tracking quando a aba for fechada
 window.addEventListener("beforeunload", function () {

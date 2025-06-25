@@ -75,19 +75,20 @@
   let currentPage = 1;
   let pageEnterTime = Date.now();
 
-  // Tracking quando fecha a aba
-  window.addEventListener("beforeunload", () => {
+
+  window.addEventListener("beforeunload", function () {
     const elapsed = Math.floor((Date.now() - pageEnterTime) / 1000);
-    fetch("https://primorainc.app.n8n.cloud/webhook/pixel-tracking", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        pixel_id: pixelId,
-        file_url: servePdfUrl,
-        tempo_total: elapsed
-      })
-    });
-  });
+    const payload = {
+      evento: "saida_usuario",
+      pixel_id:pixelId,
+      file_url:servePdfUrl,
+      tempo_total:elapsed
+    };
+
+  navigator.sendBeacon("https://primorainc.app.n8n.cloud/webhook/pixel-tracking", JSON.stringify(payload));
+});
+
+  // Tracking quando fecha a aba
 
   // Botão de download
   document.getElementById("downloadButton").addEventListener("click", () => {

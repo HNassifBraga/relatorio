@@ -76,17 +76,25 @@
   let pageEnterTime = Date.now();
 
 
-  window.addEventListener("beforeunload", function () {
-    const elapsed = Math.floor((Date.now() - pageEnterTime) / 1000);
-    const payload = {
-      evento: "saida_usuario",
-      pixel_id:pixelId,
-      file_url:servePdfUrl,
-      pagina:currentPage,
-      tempo_total:elapsed
-    };
+PDFViewerApplication.eventBus.on('pagechanging', function (e) {
+  currentPage = e.pageNumber;
+});
 
-  navigator.sendBeacon("https://primorainc.app.n8n.cloud/webhook/pixel-tracking", JSON.stringify(payload));
+// Envia tracking quando a aba for fechada
+window.addEventListener("beforeunload", function () {
+  const elapsed = Math.floor((Date.now() - pageEnterTime) / 1000);
+  const payload = {
+    evento: "saida_usuario",
+    pixel_id: pixelId,
+    file_url: servePdfUrl,
+    pagina: currentPage,
+    tempo_total: elapsed
+  };
+
+  navigator.sendBeacon(
+    "https://primorainc.app.n8n.cloud/webhook/pixel-tracking",
+    JSON.stringify(payload)
+  );
 });
 
   // Tracking quando fecha a aba
